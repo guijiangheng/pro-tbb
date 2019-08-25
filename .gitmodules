@@ -1,0 +1,8 @@
+[submodule "ext/tbb"]
+	path = ext/tbb
+	url = https://github.com/intel/tbb.git
+	branch = tbb_2019
+[submodule "ext/pstl"]
+	path = ext/pstl
+	url = https://github.com/intel/parallelstl.git
+	branch = releases
