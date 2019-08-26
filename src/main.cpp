@@ -47,12 +47,54 @@ void fig_1_7(const std::vector<ImagePtr>& images) {
   }
 }
 
+void fig_1_10(const std::vector<ImagePtr>& images) {
+  const double tints[] = { 0.75, 0, 0 };
+
+  int i = 0;
+  tbb::flow::graph g;
+
+  tbb::flow::source_node<ImagePtr> src(g, [&i, &images](ImagePtr& out) {
+    if (i < images.size()) {
+      out = images[i++];
+      return true;
+    }
+    return false;
+  }, false);
+
+  tbb::flow::function_node<ImagePtr, ImagePtr> gamma(g,
+    tbb::flow::unlimited,
+    [](const ImagePtr& img) -> ImagePtr {
+      return applyGamma(img, 1.4);
+    }
+  );
+
+  tbb::flow::function_node<ImagePtr, ImagePtr> tint(g,
+    tbb::flow::unlimited,
+    [tints](const ImagePtr& img) -> ImagePtr {
+      return applyTint(img, tints);
+    }
+  );
+
+  tbb::flow::function_node<ImagePtr> write(g,
+    tbb::flow::unlimited,
+    [](const ImagePtr& img) {
+      writeImage(img);
+    }
+  );
+
+  tbb::flow::make_edge(src, gamma);
+  tbb::flow::make_edge(gamma, tint);
+  tbb::flow::make_edge(tint, write);
+  src.activate();
+  g.wait_for_all();
+}
+
 int main() {
   std::vector<ImagePtr> images;
   for (auto i = 2000; i < 20000000; i *= 10)
     images.push_back(makeFractalImage(800, 800, i));
   auto now = tbb::tick_count::now();
-  fig_1_7(images);
+  fig_1_10(images);
   std::cout << "Time: " << (tbb::tick_count::now() - now).seconds() << " seconds" << std::endl;
   return 0;
 }
