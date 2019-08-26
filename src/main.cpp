@@ -1,5 +1,7 @@
 #include <iostream>
 #include <tbb/tbb.h>
+#include <pstl/algorithm>
+#include <pstl/execution>
 #include <protbb/fractal.h>
 
 using namespace protbb;
@@ -11,13 +13,13 @@ ImagePtr applyGamma(const ImagePtr& image, double gamma) {
   auto outImage = std::make_shared<Image>(image->name + "_gamma", width, height);
 
   tbb::parallel_for(0, height, [&image, &outImage, width, height, gamma](int i) {
-    for (auto j = 0; j < width; ++j) {
-      auto index = i * width + j;
-      auto& p = image->data[index];
+    auto begSrc = &image->data[0] + width * i;
+    auto begDest = &outImage->data[0] + width * i;
+    std::transform(pstl::execution::unseq, begSrc, begSrc + width, begDest, [gamma](const Image::Pixel& p) {
       auto v = 0.3 * p.bgra[2] + 0.59 * p.bgra[1] + 0.11 * p.bgra[0];
       auto res = std::pow(v, gamma);
-      outImage->data[index] = Image::Pixel(res, res, res);
-    }
+      return Image::Pixel(res, res, res);
+    });
   });
 
   return outImage;
@@ -29,14 +31,14 @@ ImagePtr applyTint(const ImagePtr& image, const double *tints) {
   auto outImage = std::make_shared<Image>(image->name + "_tinted", width, height);
 
   tbb::parallel_for(0, height, [&image, &outImage, width, height, tints](int i) {
-    for (auto j = 0; j < width; ++j) {
-      auto index = i * width + j;
-      auto& p = image->data[index];
+    auto begSrc = &image->data[0] + width * i;
+    auto begDest = &outImage->data[0] + width * i;
+    std::transform(pstl::execution::unseq, begSrc, begSrc + width, begDest, [tints](const Image::Pixel& p) {
       auto b = (std::uint8_t)(p.bgra[0] + (255 - p.bgra[0]) * tints[0]);
       auto g = (std::uint8_t)(p.bgra[1] + (255 - p.bgra[1]) * tints[1]);
       auto r = (std::uint8_t)(p.bgra[2] + (255 - p.bgra[2]) * tints[2]);
-      outImage->data[index] = Image::Pixel(b, g, r);
-    }
+      return Image::Pixel(b, g, r);
+    });
   });
 
   return outImage;
