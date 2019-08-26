@@ -21,7 +21,7 @@ public:
     { }
   };
 
-  Image(int width, int height) {
+  Image(const std::string& name, int width, int height) : name(name) {
     reset(width, height);
   }
 
@@ -62,6 +62,7 @@ public:
   }
 
 public:
+  std::string name;
   int width, height;
   std::vector<Pixel> data;
 

@@ -37,7 +37,8 @@ private:
 };
 
 static std::shared_ptr<Image> makeFractalImage(int width, int height, double magn = 2000000) {
-  auto image = std::make_shared<Image>(width, height);
+  auto name = std::string("fractal_") + std::to_string((int)magn);
+  auto image = std::make_shared<Image>(name, width, height);
   Fractal fractal(width, height, magn);
   image->fill([&fractal](int x, int y) { return fractal.calPixel(x, y); });
   return image;
