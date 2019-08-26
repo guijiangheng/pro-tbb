@@ -9,7 +9,8 @@ ImagePtr applyGamma(const ImagePtr& image, double gamma) {
   auto width = image->width;
   auto height = image->height;
   auto outImage = std::make_shared<Image>(image->name + "_gamma", width, height);
-  for (auto i = 0; i < height; ++i)
+
+  tbb::parallel_for(0, height, [&image, &outImage, width, height, gamma](int i) {
     for (auto j = 0; j < width; ++j) {
       auto index = i * width + j;
       auto& p = image->data[index];
@@ -17,6 +18,8 @@ ImagePtr applyGamma(const ImagePtr& image, double gamma) {
       auto res = std::pow(v, gamma);
       outImage->data[index] = Image::Pixel(res, res, res);
     }
+  });
+
   return outImage;
 }
 
@@ -24,7 +27,8 @@ ImagePtr applyTint(const ImagePtr& image, const double *tints) {
   auto width = image->width;
   auto height = image->height;
   auto outImage = std::make_shared<Image>(image->name + "_tinted", width, height);
-  for (auto i = 0; i < height; ++i)
+
+  tbb::parallel_for(0, height, [&image, &outImage, width, height, tints](int i) {
     for (auto j = 0; j < width; ++j) {
       auto index = i * width + j;
       auto& p = image->data[index];
@@ -33,6 +37,8 @@ ImagePtr applyTint(const ImagePtr& image, const double *tints) {
       auto r = (std::uint8_t)(p.bgra[2] + (255 - p.bgra[2]) * tints[2]);
       outImage->data[index] = Image::Pixel(b, g, r);
     }
+  });
+
   return outImage;
 }
 
