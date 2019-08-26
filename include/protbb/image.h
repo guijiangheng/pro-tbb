@@ -50,8 +50,13 @@ public:
   template <typename F>
   void fill(F f) {
     if (data.empty()) return;
-    std::for_each(data.begin(), data.end(), [f](auto& pixel) {
-      auto val = (std::uint8_t)(std::min(255.0f, f * 255.0f));
+    auto i = -1;
+    std::for_each(data.begin(), data.end(), [&i, f, this](auto& pixel) {
+      ++i;
+      auto x = i / width;
+      auto y = i % width;
+      auto val = f(x, y);
+      if (val > 255) val = 255;
       pixel = Pixel(val, val, val);
     });
   }
